@@ -999,14 +999,25 @@
     }
 
     function updateTeamBars(teams, total) {
-      for (const [teamName, counts] of Object.entries(teams)) {
+      // Get all teams dynamically
+      const teamNames = Object.keys(teams).filter(t => t && t !== 'undefined');
+      
+      let firstTeam = true;
+      for (const teamName of teamNames) {
+        const counts = teams[teamName];
         const live = counts['Live'] || 0;
         const ongoing = counts['Ongoing'] || 0;
         const notStarted = counts['Not started'] || 0;
         const teamTotal = live + ongoing + notStarted;
 
-        const barElement = document.getElementById(`${teamName.toLowerCase()}Bar`);
-        const labelElement = document.getElementById(`${teamName.toLowerCase()}Label`);
+        const barId = teamName.toLowerCase().replace(/\s+/g, '');
+        const barElement = document.getElementById(barId + 'Bar');
+        const labelElement = document.getElementById(barId + 'Label');
+
+        // Skip if elements don't exist (only show first 2 teams in UI)
+        if (!barElement || !labelElement) {
+          continue;
+        }
 
         // Clear and rebuild bar
         barElement.innerHTML = '';
@@ -1036,42 +1047,48 @@
         }
 
         labelElement.textContent = `${live} Live · ${ongoing} Ongoing · ${notStarted} Not Started`;
+        firstTeam = false;
       }
 
-      // Unified bar
-      const allLive = (teams.Logistics['Live'] || 0) + (teams.SPX['Live'] || 0);
-      const allOngoing = (teams.Logistics['Ongoing'] || 0) + (teams.SPX['Ongoing'] || 0);
-      const allNotStarted = (teams.Logistics['Not started'] || 0) + (teams.SPX['Not started'] || 0);
+      // Unified bar - sum all teams
+      let allLive = 0, allOngoing = 0, allNotStarted = 0;
+      for (const counts of Object.values(teams)) {
+        allLive += counts['Live'] || 0;
+        allOngoing += counts['Ongoing'] || 0;
+        allNotStarted += counts['Not started'] || 0;
+      }
       const allTotal = allLive + allOngoing + allNotStarted;
 
       const unifiedBar = document.getElementById('unifiedBar');
-      unifiedBar.innerHTML = '';
+      if (unifiedBar) {
+        unifiedBar.innerHTML = '';
 
-      if (allLive > 0) {
-        const seg = document.createElement('div');
-        seg.className = 'status-bar-segment live';
-        seg.style.width = `${(allLive / allTotal) * 100}%`;
-        seg.textContent = allLive;
-        unifiedBar.appendChild(seg);
+        if (allLive > 0) {
+          const seg = document.createElement('div');
+          seg.className = 'status-bar-segment live';
+          seg.style.width = `${(allLive / allTotal) * 100}%`;
+          seg.textContent = allLive;
+          unifiedBar.appendChild(seg);
+        }
+
+        if (allOngoing > 0) {
+          const seg = document.createElement('div');
+          seg.className = 'status-bar-segment ongoing';
+          seg.style.width = `${(allOngoing / allTotal) * 100}%`;
+          seg.textContent = allOngoing;
+          unifiedBar.appendChild(seg);
+        }
+
+        if (allNotStarted > 0) {
+          const seg = document.createElement('div');
+          seg.className = 'status-bar-segment not-started';
+          seg.style.width = `${(allNotStarted / allTotal) * 100}%`;
+          seg.textContent = allNotStarted;
+          unifiedBar.appendChild(seg);
+        }
+
+        document.getElementById('unifiedLabel').textContent = `${allLive} Live · ${allOngoing} Ongoing · ${allNotStarted} Not Started`;
       }
-
-      if (allOngoing > 0) {
-        const seg = document.createElement('div');
-        seg.className = 'status-bar-segment ongoing';
-        seg.style.width = `${(allOngoing / allTotal) * 100}%`;
-        seg.textContent = allOngoing;
-        unifiedBar.appendChild(seg);
-      }
-
-      if (allNotStarted > 0) {
-        const seg = document.createElement('div');
-        seg.className = 'status-bar-segment not-started';
-        seg.style.width = `${(allNotStarted / allTotal) * 100}%`;
-        seg.textContent = allNotStarted;
-        unifiedBar.appendChild(seg);
-      }
-
-      document.getElementById('unifiedLabel').textContent = `${allLive} Live · ${allOngoing} Ongoing · ${allNotStarted} Not Started`;
     }
 
     function calculateCompletion(data) {
@@ -1104,14 +1121,20 @@
       const totalComplete = biComplete + frComplete;
       const totalAll = biTotal + frTotal;
 
-      document.getElementById('completionBI').textContent = `${biComplete}/${biTotal}`;
-      document.getElementById('completionBIPct').textContent = `${((biComplete / biTotal) * 100).toFixed(0)}% complete`;
+      if (biTotal > 0) {
+        document.getElementById('completionBI').textContent = `${biComplete}/${biTotal}`;
+        document.getElementById('completionBIPct').textContent = `${((biComplete / biTotal) * 100).toFixed(0)}% complete`;
+      }
 
-      document.getElementById('completionFR').textContent = `${frComplete}/${frTotal}`;
-      document.getElementById('completionFRPct').textContent = `${((frComplete / frTotal) * 100).toFixed(0)}% complete`;
+      if (frTotal > 0) {
+        document.getElementById('completionFR').textContent = `${frComplete}/${frTotal}`;
+        document.getElementById('completionFRPct').textContent = `${((frComplete / frTotal) * 100).toFixed(0)}% complete`;
+      }
 
-      document.getElementById('completionTotal').textContent = `${totalComplete}/${totalAll}`;
-      document.getElementById('completionTotalPct').textContent = `${((totalComplete / totalAll) * 100).toFixed(0)}% complete`;
+      if (totalAll > 0) {
+        document.getElementById('completionTotal').textContent = `${totalComplete}/${totalAll}`;
+        document.getElementById('completionTotalPct').textContent = `${((totalComplete / totalAll) * 100).toFixed(0)}% complete`;
+      }
     }
 
     function renderTables(biData, frData) {
