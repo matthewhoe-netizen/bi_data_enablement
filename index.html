@@ -551,6 +551,84 @@
       font-size: 11px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    table th:hover {
+      background: #EFEFEB;
+    }
+
+    table th::after {
+      content: ' ↕';
+      font-size: 10px;
+      opacity: 0.3;
+    }
+
+    table th.sort-asc::after {
+      content: ' ↑';
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    table th.sort-desc::after {
+      content: ' ↓';
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    .table-filters {
+      padding: 12px 16px;
+      background: #FAFAF8;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .filter-select {
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font-size: 12px;
+      background: var(--white);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .filter-select:hover {
+      border-color: var(--accent);
+    }
+
+    .clear-filters {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      background: var(--white);
+      color: #666;
+      transition: all 0.15s;
+    }
+
+    .clear-filters:hover {
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     table th:last-child {
@@ -846,16 +924,31 @@
       <!-- BI Data Enablement Table -->
       <div class="table-wrapper">
         <div class="table-header">BI Data Enablement</div>
+        <div class="table-filters" id="biFilters">
+          <div class="filter-group">
+            <span class="filter-label">Filter:</span>
+            <select class="filter-select" id="biTeamFilter" onchange="filterTable('bi')">
+              <option value="">All Teams</option>
+            </select>
+            <select class="filter-select" id="biStatusFilter" onchange="filterTable('bi')">
+              <option value="">All Status</option>
+            </select>
+            <select class="filter-select" id="biPriorityFilter" onchange="filterTable('bi')">
+              <option value="">All Priority</option>
+            </select>
+          </div>
+          <button class="clear-filters" onclick="clearFilters('bi')">Clear Filters</button>
+        </div>
         <table id="biTable">
           <thead>
             <tr>
-              <th>Team</th>
-              <th>Capability</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Target Date</th>
-              <th>Latest Milestone</th>
-              <th>PIC</th>
+              <th onclick="sortTable('bi', 0)">Team</th>
+              <th onclick="sortTable('bi', 1)">Capability</th>
+              <th onclick="sortTable('bi', 2)">Priority</th>
+              <th onclick="sortTable('bi', 3)">Status</th>
+              <th onclick="sortTable('bi', 4)">Target Date</th>
+              <th onclick="sortTable('bi', 5)">Latest Milestone</th>
+              <th onclick="sortTable('bi', 6)">PIC</th>
             </tr>
           </thead>
           <tbody id="biTableBody">
@@ -869,15 +962,27 @@
       <!-- Function Repo Table -->
       <div class="table-wrapper">
         <div class="table-header">Function Repo</div>
+        <div class="table-filters" id="frFilters">
+          <div class="filter-group">
+            <span class="filter-label">Filter:</span>
+            <select class="filter-select" id="frTeamFilter" onchange="filterTable('fr')">
+              <option value="">All Teams</option>
+            </select>
+            <select class="filter-select" id="frStatusFilter" onchange="filterTable('fr')">
+              <option value="">All Status</option>
+            </select>
+          </div>
+          <button class="clear-filters" onclick="clearFilters('fr')">Clear Filters</button>
+        </div>
         <table id="frTable">
           <thead>
             <tr>
-              <th>Team</th>
-              <th>Function</th>
-              <th>Status</th>
-              <th>V1 Target Date</th>
-              <th>Latest Milestone</th>
-              <th>PIC</th>
+              <th onclick="sortTable('fr', 0)">Team</th>
+              <th onclick="sortTable('fr', 1)">Function</th>
+              <th onclick="sortTable('fr', 2)">Status</th>
+              <th onclick="sortTable('fr', 3)">V1 Target Date</th>
+              <th onclick="sortTable('fr', 4)">Latest Milestone</th>
+              <th onclick="sortTable('fr', 5)">PIC</th>
             </tr>
           </thead>
           <tbody id="frTableBody">
@@ -1255,8 +1360,174 @@
       summary.classList.add('active');
     }
 
-    // Initialize on load
-    window.addEventListener('DOMContentLoaded', loadData);
+    // ──── SORTING AND FILTERING ────
+    let biSortState = { column: -1, direction: 'asc' };
+    let frSortState = { column: -1, direction: 'asc' };
+    let biFilterState = { team: '', status: '', priority: '' };
+    let frFilterState = { team: '', status: '' };
+
+    function sortTable(tableType, columnIndex) {
+      const tbody = document.getElementById(tableType + 'TableBody');
+      const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
+      const headers = document.querySelectorAll(`#${tableType}Table thead th`);
+      const sortState = tableType === 'bi' ? biSortState : frSortState;
+
+      // Toggle direction if same column
+      if (sortState.column === columnIndex) {
+        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.column = columnIndex;
+        sortState.direction = 'asc';
+      }
+
+      // Update header indicators
+      headers.forEach((h, i) => {
+        h.classList.remove('sort-asc', 'sort-desc');
+        if (i === columnIndex) {
+          h.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+      });
+
+      // Sort rows
+      rows.sort((a, b) => {
+        const aVal = a.cells[columnIndex].textContent.trim();
+        const bVal = b.cells[columnIndex].textContent.trim();
+
+        // Try numeric sort
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return sortState.direction === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+
+        // String sort
+        return sortState.direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      });
+
+      // Reorder rows
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    function filterTable(tableType) {
+      const tbody = document.getElementById(tableType + 'TableBody');
+      const rows = tbody.querySelectorAll('tr');
+      const filterState = tableType === 'bi' ? biFilterState : frFilterState;
+
+      // Update filter state from dropdowns
+      if (tableType === 'bi') {
+        filterState.team = document.getElementById('biTeamFilter').value;
+        filterState.status = document.getElementById('biStatusFilter').value;
+        filterState.priority = document.getElementById('biPriorityFilter').value;
+      } else {
+        filterState.team = document.getElementById('frTeamFilter').value;
+        filterState.status = document.getElementById('frStatusFilter').value;
+      }
+
+      rows.forEach(row => {
+        if (row.style.display === 'none' && row.cells.length < 2) return; // Skip empty placeholder
+
+        let show = true;
+
+        // Team filter
+        if (filterState.team && row.cells[0].textContent.trim() !== filterState.team) {
+          show = false;
+        }
+
+        // Status filter
+        const statusColIndex = tableType === 'bi' ? 3 : 2;
+        if (filterState.status && row.cells[statusColIndex].textContent.trim() !== filterState.status) {
+          show = false;
+        }
+
+        // Priority filter (BI only)
+        if (tableType === 'bi' && filterState.priority) {
+          const priorityText = row.cells[2].textContent.trim();
+          if (!priorityText.includes(filterState.priority)) {
+            show = false;
+          }
+        }
+
+        row.style.display = show ? '' : 'none';
+      });
+    }
+
+    function clearFilters(tableType) {
+      if (tableType === 'bi') {
+        document.getElementById('biTeamFilter').value = '';
+        document.getElementById('biStatusFilter').value = '';
+        document.getElementById('biPriorityFilter').value = '';
+        biFilterState = { team: '', status: '', priority: '' };
+      } else {
+        document.getElementById('frTeamFilter').value = '';
+        document.getElementById('frStatusFilter').value = '';
+        frFilterState = { team: '', status: '' };
+      }
+
+      filterTable(tableType);
+    }
+
+    // Populate filter dropdowns after data loads
+    function populateFilters() {
+      const biData = window.trackerData.bi;
+      const frData = window.trackerData.fr;
+
+      // BI filters
+      const biTeams = [...new Set(biData.map(r => r['Team']).filter(t => t))].sort();
+      const biStatuses = [...new Set(biData.map(r => r['Status']).filter(s => s))].sort();
+      const biPriorities = [...new Set(biData.map(r => r['Priority']).filter(p => p))].sort();
+
+      const biTeamSelect = document.getElementById('biTeamFilter');
+      biTeams.forEach(team => {
+        const opt = document.createElement('option');
+        opt.value = team;
+        opt.textContent = team;
+        biTeamSelect.appendChild(opt);
+      });
+
+      const biStatusSelect = document.getElementById('biStatusFilter');
+      biStatuses.forEach(status => {
+        const opt = document.createElement('option');
+        opt.value = status;
+        opt.textContent = status;
+        biStatusSelect.appendChild(opt);
+      });
+
+      const biPrioritySelect = document.getElementById('biPriorityFilter');
+      biPriorities.forEach(priority => {
+        const opt = document.createElement('option');
+        opt.value = priority;
+        opt.textContent = priority;
+        biPrioritySelect.appendChild(opt);
+      });
+
+      // FR filters
+      const frTeams = [...new Set(frData.map(r => r['Team']).filter(t => t))].sort();
+      const frStatuses = [...new Set(frData.map(r => r['Status']).filter(s => s))].sort();
+
+      const frTeamSelect = document.getElementById('frTeamFilter');
+      frTeams.forEach(team => {
+        const opt = document.createElement('option');
+        opt.value = team;
+        opt.textContent = team;
+        frTeamSelect.appendChild(opt);
+      });
+
+      const frStatusSelect = document.getElementById('frStatusFilter');
+      frStatuses.forEach(status => {
+        const opt = document.createElement('option');
+        opt.value = status;
+        opt.textContent = status;
+        frStatusSelect.appendChild(opt);
+      });
+    }
+
+    // Call after data is rendered
+    function renderTables(biData, frData) {
+      // ... existing table render code ...
+      
+      // Then populate filters
+      setTimeout(populateFilters, 100);
+    }
   </script>
 </body>
 
