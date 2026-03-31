@@ -265,87 +265,109 @@
 
     /* ── STATUS BY TEAM SECTION ── */
     .team-status-section {
-      background: var(--white);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 28px;
       margin-bottom: 32px;
     }
 
     .team-status-header {
       font-size: 14px;
       font-weight: 600;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       color: var(--ink);
     }
 
-    .team-row {
-      margin-bottom: 28px;
-      padding-bottom: 28px;
-      border-bottom: 1px solid var(--line);
+    .team-section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      background: var(--white);
     }
 
-    .team-row:last-child {
-      margin-bottom: 0;
-      padding-bottom: 0;
+    .team-section-header {
+      padding: 14px 16px;
+      background: #FAFAF8;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      transition: background 0.2s;
+      user-select: none;
+    }
+
+    .team-section-header:hover {
+      background: #F0F0EB;
+    }
+
+    .team-section-header.collapsed {
       border-bottom: none;
     }
 
-    .team-name {
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--ink);
-    }
-
-    .team-name.unified {
-      color: var(--accent);
-      border-top: 2px solid var(--line);
-      padding-top: 20px;
-      margin-top: 20px;
-      margin-bottom: 12px;
-    }
-
-    .status-bars {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .status-bar {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .status-bar-visual {
-      height: 24px;
-      flex: 1;
-      background: var(--line);
-      border-radius: 4px;
-      overflow: hidden;
-      display: flex;
-    }
-
-    .status-bar-segment {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
+    .team-section-title {
+      font-size: 13px;
       font-weight: 600;
-      color: white;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .status-bar-segment.live {
-      background: var(--green);
+    .team-section-toggle {
+      font-size: 14px;
+      transition: transform 0.2s;
+      color: #666;
     }
 
-    .status-bar-segment.ongoing {
-      background: var(--amber);
+    .team-section.collapsed .team-section-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .team-section-stats {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .team-functions {
+      padding: 12px 0;
+      max-height: 1000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .team-section.collapsed .team-functions {
+      max-height: 0;
+      padding: 0;
+    }
+
+    .function-row {
+      padding: 8px 16px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .function-row:first-child {
+      border-top: none;
+    }
+
+    .function-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: #666;
+      min-width: 140px;
+    }
+
+    .function-bar {
+      flex: 1;
+      margin: 0 16px;
+    }
+
+    .function-stats {
+      font-size: 10px;
+      color: #999;
+      min-width: 150px;
+      text-align: right;
     }
 
     .status-bar-segment.not-started {
@@ -860,56 +882,8 @@
       <div class="team-status-section">
         <div class="team-status-header">Initiatives per Team / Function</div>
 
-        <div id="teamStatusContainer">
-          <div class="team-row">
-            <div class="team-name">Logistics</div>
-            <div class="status-bars">
-              <div class="status-bar">
-                <div class="status-bar-visual" id="logisticsBar"></div>
-                <div class="status-bar-label" id="logisticsLabel">-- initiatives</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="team-row">
-            <div class="team-name">SPX</div>
-            <div class="status-bars">
-              <div class="status-bar">
-                <div class="status-bar-visual" id="spxBar"></div>
-                <div class="status-bar-label" id="spxLabel">-- initiatives</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="team-row">
-            <div class="team-name">Warehouse</div>
-            <div class="status-bars">
-              <div class="status-bar">
-                <div class="status-bar-visual" id="warehouseBar"></div>
-                <div class="status-bar-label" id="warehouseLabel">-- initiatives</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="team-row">
-            <div class="team-name">BI</div>
-            <div class="status-bars">
-              <div class="status-bar">
-                <div class="status-bar-visual" id="biBar"></div>
-                <div class="status-bar-label" id="biLabel">-- initiatives</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="team-row">
-            <div class="team-name unified">Unified</div>
-            <div class="status-bars">
-              <div class="status-bar">
-                <div class="status-bar-visual" id="unifiedBar"></div>
-                <div class="status-bar-label" id="unifiedLabel">-- initiatives</div>
-              </div>
-            </div>
-          </div>
+        <div id="teamStatusContainer" style="display: flex; flex-direction: column; gap: 0;">
+          <!-- Teams will be dynamically created here -->
         </div>
       </div>
     </section>
@@ -1138,104 +1112,121 @@
       document.getElementById('metricNotStartedBar').style.width = `${(notStarted / total) * 100}%`;
 
       // Update team status bars
-      updateTeamBars(teams, total);
+      updateTeamBars(teams, total, data.bi, data.fr);
 
       // Calculate completion
       calculateCompletion(data);
     }
 
-    function updateTeamBars(teams, total) {
-      // Get all teams dynamically
-      const teamNames = Object.keys(teams).filter(t => t && t !== 'undefined');
+    function updateTeamBars(teams, total, biData, frData) {
+      const container = document.getElementById('teamStatusContainer');
+      if (!container) {
+        console.error('teamStatusContainer not found');
+        return;
+      }
       
-      for (const teamName of teamNames) {
+      container.innerHTML = '';
+      
+      console.log('updateTeamBars called with teams:', Object.keys(teams));
+      console.log('biData rows:', biData ? biData.length : 'null');
+      console.log('frData rows:', frData ? frData.length : 'null');
+
+      // Combine BI and FR data for function tracking
+      const allData = (biData || []).concat(frData || []);
+      
+      // Build team -> function -> statuses map
+      const teamFunctionMap = {};
+      allData.forEach(row => {
+        const team = (row['Team'] || '').trim();
+        const func = (row['Capability'] || row['Function'] || '').trim();
+        const status = (row['Status'] || '').trim();
+        
+        if (team && func && status) {
+          if (!teamFunctionMap[team]) teamFunctionMap[team] = {};
+          if (!teamFunctionMap[team][func]) teamFunctionMap[team][func] = { Live: 0, Ongoing: 0, 'Not started': 0 };
+          teamFunctionMap[team][func][status] = (teamFunctionMap[team][func][status] || 0) + 1;
+        }
+      });
+
+      console.log('teamFunctionMap:', teamFunctionMap);
+
+      // Create collapsible sections for each team
+      const teamNames = Object.keys(teams).filter(t => t && t !== 'undefined').sort();
+      
+      console.log('Creating sections for teams:', teamNames);
+      
+      if (teamNames.length === 0) {
+        container.innerHTML = '<p style="color: #999; padding: 16px;">No team data available</p>';
+        return;
+      }
+
+      teamNames.forEach(teamName => {
         const counts = teams[teamName];
         const live = counts['Live'] || 0;
         const ongoing = counts['Ongoing'] || 0;
         const notStarted = counts['Not started'] || 0;
         const teamTotal = live + ongoing + notStarted;
 
-        const barId = teamName.toLowerCase().replace(/\s+/g, '');
-        const barElement = document.getElementById(barId + 'Bar');
-        const labelElement = document.getElementById(barId + 'Label');
+        // Create team section
+        const section = document.createElement('div');
+        section.className = 'team-section';
+        
+        const header = document.createElement('div');
+        header.className = 'team-section-header';
+        header.innerHTML = `
+          <div class="team-section-title">
+            <span class="team-section-toggle">▼</span>
+            <span>${teamName}</span>
+          </div>
+          <div class="team-section-stats">${live} Live · ${ongoing} Ongoing · ${notStarted} Not Started</div>
+        `;
+        
+        // Make header clickable to toggle functions
+        header.onclick = function(e) {
+          e.stopPropagation();
+          section.classList.toggle('collapsed');
+        };
 
-        // Skip if elements don't exist
-        if (!barElement || !labelElement) {
-          continue;
+        const functionsDiv = document.createElement('div');
+        functionsDiv.className = 'team-functions';
+
+        // Add function rows
+        const teamFunctions = teamFunctionMap[teamName] || {};
+        const funcNames = Object.keys(teamFunctions).sort();
+        
+        if (funcNames.length === 0) {
+          const emptyRow = document.createElement('div');
+          emptyRow.style.padding = '8px 16px';
+          emptyRow.style.color = '#999';
+          emptyRow.textContent = 'No functions';
+          functionsDiv.appendChild(emptyRow);
+        } else {
+          funcNames.forEach(func => {
+            const funcCounts = teamFunctions[func];
+            const funcLive = funcCounts['Live'] || 0;
+            const funcOngoing = funcCounts['Ongoing'] || 0;
+            const funcNotStarted = funcCounts['Not started'] || 0;
+            const funcTotal = funcLive + funcOngoing + funcNotStarted;
+
+            const funcRow = document.createElement('div');
+            funcRow.className = 'function-row';
+            funcRow.innerHTML = `
+              <div class="function-name">${func}</div>
+              <div class="function-bar" style="display: flex; gap: 1px; height: 20px; background: #f5f5f5; border-radius: 3px; overflow: hidden;">
+                ${funcLive > 0 ? `<div style="flex: ${funcLive / funcTotal}; background: var(--green); display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 600;">${funcLive}</div>` : ''}
+                ${funcOngoing > 0 ? `<div style="flex: ${funcOngoing / funcTotal}; background: var(--amber); display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 600;">${funcOngoing}</div>` : ''}
+                ${funcNotStarted > 0 ? `<div style="flex: ${funcNotStarted / funcTotal}; background: #E0E0E0; display: flex; align-items: center; justify-content: center; color: #999; font-size: 9px; font-weight: 600;">${funcNotStarted}</div>` : ''}
+              </div>
+              <div class="function-stats">${funcLive}L · ${funcOngoing}O · ${funcNotStarted}N</div>
+            `;
+            functionsDiv.appendChild(funcRow);
+          });
         }
 
-        // Clear and rebuild bar
-        barElement.innerHTML = '';
-
-        if (live > 0) {
-          const seg = document.createElement('div');
-          seg.className = 'status-bar-segment live';
-          seg.style.width = `${(live / teamTotal) * 100}%`;
-          seg.textContent = live;
-          barElement.appendChild(seg);
-        }
-
-        if (ongoing > 0) {
-          const seg = document.createElement('div');
-          seg.className = 'status-bar-segment ongoing';
-          seg.style.width = `${(ongoing / teamTotal) * 100}%`;
-          seg.textContent = ongoing;
-          barElement.appendChild(seg);
-        }
-
-        if (notStarted > 0) {
-          const seg = document.createElement('div');
-          seg.className = 'status-bar-segment not-started';
-          seg.style.width = `${(notStarted / teamTotal) * 100}%`;
-          seg.textContent = notStarted;
-          barElement.appendChild(seg);
-        }
-
-        // Build label with status counts and function list
-        const functionList = counts.items ? counts.items.slice(0, 3).join(', ') : '';
-        const functionText = functionList ? ` (${functionList}${counts.items.length > 3 ? '...' : ''})` : '';
-        labelElement.innerHTML = `${live} Live · ${ongoing} Ongoing · ${notStarted} Not Started${functionText ? '<br><span style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Functions: ' + functionText + '</span>' : ''}`;
-      }
-
-      // Unified bar - sum all teams
-      let allLive = 0, allOngoing = 0, allNotStarted = 0;
-      for (const counts of Object.values(teams)) {
-        allLive += counts['Live'] || 0;
-        allOngoing += counts['Ongoing'] || 0;
-        allNotStarted += counts['Not started'] || 0;
-      }
-      const allTotal = allLive + allOngoing + allNotStarted;
-
-      const unifiedBar = document.getElementById('unifiedBar');
-      if (unifiedBar) {
-        unifiedBar.innerHTML = '';
-
-        if (allLive > 0) {
-          const seg = document.createElement('div');
-          seg.className = 'status-bar-segment live';
-          seg.style.width = `${(allLive / allTotal) * 100}%`;
-          seg.textContent = allLive;
-          unifiedBar.appendChild(seg);
-        }
-
-        if (allOngoing > 0) {
-          const seg = document.createElement('div');
-          seg.className = 'status-bar-segment ongoing';
-          seg.style.width = `${(allOngoing / allTotal) * 100}%`;
-          seg.textContent = allOngoing;
-          unifiedBar.appendChild(seg);
-        }
-
-        if (allNotStarted > 0) {
-          const seg = document.createElement('div');
-          seg.className = 'status-bar-segment not-started';
-          seg.style.width = `${(allNotStarted / allTotal) * 100}%`;
-          seg.textContent = allNotStarted;
-          unifiedBar.appendChild(seg);
-        }
-
-        document.getElementById('unifiedLabel').textContent = `${allLive} Live · ${allOngoing} Ongoing · ${allNotStarted} Not Started`;
-      }
+        section.appendChild(header);
+        section.appendChild(functionsDiv);
+        container.appendChild(section);
+      });
     }
 
     function calculateCompletion(data) {
