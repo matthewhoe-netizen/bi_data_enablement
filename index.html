@@ -896,33 +896,31 @@
   </footer>
 
   <script>
-    // API Configuration
+    // API Configuration  
     const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/shopee.com/s/AKfycbx2aHfYGgUDOn03LOrBYNMLjvGBe-pIIWsNFYVylpc7I1vQPc1dmJZrh3OK1bX163RE/exec';
 
-    // Load and process data
-    async function loadData() {
-      try {
-        // Fetch from Apps Script endpoint
-        const response = await fetch(APPS_SCRIPT_URL);
-        const result = await response.json();
-
-        if (!result.success) {
-          throw new Error(result.error || 'Unknown error');
-        }
-
-        const biData = result.data.bi;
-        const frData = result.data.fr;
-
-        // Process and display
-        processData(biData, frData);
-        document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
-
-      } catch (error) {
-        console.error('Error loading data:', error);
-        document.getElementById('lastUpdated').textContent = 'Error loading data';
-        alert('Failed to load tracker data. Please check the Apps Script endpoint is deployed and accessible.');
-      }
+    // Load data using JSONP (bypasses CORS)
+    function loadData() {
+      const script = document.createElement('script');
+      script.src = APPS_SCRIPT_URL + '?action=data&callback=handleDataResponse';
+      script.onerror = function() {
+        document.getElementById('lastUpdated').textContent = 'Error loading';
+        alert('Failed to load data. Check Apps Script is deployed.');
+      };
+      document.head.appendChild(script);
     }
+
+    // JSONP callback
+    window.handleDataResponse = function(result) {
+      if (!result.success) {
+        console.error('Error:', result.error);
+        document.getElementById('lastUpdated').textContent = 'Error';
+        return;
+      }
+
+      processData(result.data.bi, result.data.fr);
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+    };
 
     function processData(biData, frData) {
       // Combine data for analysis
