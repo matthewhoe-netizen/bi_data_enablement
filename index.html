@@ -1332,6 +1332,9 @@
         `;
         frBody.appendChild(tr);
       });
+
+      // Populate filter dropdowns with data
+      populateFilters(biData, frData);
     }
 
     async function generateSummary() {
