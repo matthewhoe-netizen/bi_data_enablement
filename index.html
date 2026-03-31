@@ -860,32 +860,54 @@
       <div class="team-status-section">
         <div class="team-status-header">Initiative Distribution Across Teams</div>
 
-        <div class="team-row">
-          <div class="team-name">Logistics</div>
-          <div class="status-bars">
-            <div class="status-bar">
-              <div class="status-bar-visual" id="logisticsBar"></div>
-              <div class="status-bar-label" id="logisticsLabel">-- initiatives</div>
+        <div id="teamStatusContainer">
+          <div class="team-row">
+            <div class="team-name">Logistics</div>
+            <div class="status-bars">
+              <div class="status-bar">
+                <div class="status-bar-visual" id="logisticsBar"></div>
+                <div class="status-bar-label" id="logisticsLabel">-- initiatives</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="team-row">
-          <div class="team-name">SPX</div>
-          <div class="status-bars">
-            <div class="status-bar">
-              <div class="status-bar-visual" id="spxBar"></div>
-              <div class="status-bar-label" id="spxLabel">-- initiatives</div>
+          <div class="team-row">
+            <div class="team-name">SPX</div>
+            <div class="status-bars">
+              <div class="status-bar">
+                <div class="status-bar-visual" id="spxBar"></div>
+                <div class="status-bar-label" id="spxLabel">-- initiatives</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="team-row">
-          <div class="team-name unified">Unified</div>
-          <div class="status-bars">
-            <div class="status-bar">
-              <div class="status-bar-visual" id="unifiedBar"></div>
-              <div class="status-bar-label" id="unifiedLabel">-- initiatives</div>
+          <div class="team-row">
+            <div class="team-name">Warehouse</div>
+            <div class="status-bars">
+              <div class="status-bar">
+                <div class="status-bar-visual" id="warehouseBar"></div>
+                <div class="status-bar-label" id="warehouseLabel">-- initiatives</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="team-row">
+            <div class="team-name">BI</div>
+            <div class="status-bars">
+              <div class="status-bar">
+                <div class="status-bar-visual" id="biBar"></div>
+                <div class="status-bar-label" id="biLabel">-- initiatives</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="team-row">
+            <div class="team-name unified">Unified</div>
+            <div class="status-bars">
+              <div class="status-bar">
+                <div class="status-bar-visual" id="unifiedBar"></div>
+                <div class="status-bar-label" id="unifiedLabel">-- initiatives</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1523,10 +1545,63 @@
 
     // Call after data is rendered
     function renderTables(biData, frData) {
-      // ... existing table render code ...
-      
-      // Then populate filters
-      setTimeout(populateFilters, 100);
+      // BI Data table
+      const biBody = document.getElementById('biTableBody');
+      biBody.innerHTML = '';
+
+      biData.forEach(row => {
+        if (!row['Team'] || row['Team'] === 'Team' || !row['Team'].trim()) return;
+
+        const status = (row['Status'] || '').trim();
+        const targetDate = row['Target Live Date'];
+        const isOverdue = targetDate && new Date(targetDate) < new Date() && status !== 'Live';
+
+        const latestMilestone = ['SMART BOT Built', 'Integrated to Repo', 'Data Tested', 'Pipeline Developed', 'Business Logic Defined', 'Kick Off Completed']
+          .find(m => (row[m] || '').trim() === 'Yes');
+
+        const tr = document.createElement('tr');
+        tr.className = isOverdue ? 'overdue' : '';
+        tr.innerHTML = `
+          <td>${row['Team']}</td>
+          <td>${row['Capability']}</td>
+          <td>${row['Priority']}</td>
+          <td><span class="status-badge ${status.toLowerCase().replace(' ', '-')}">${status}</span></td>
+          <td>${targetDate || '--'}</td>
+          <td><span class="milestone-indicator ${latestMilestone ? 'yes' : 'no'}">${latestMilestone || 'Not started'}</span></td>
+          <td>${row['BI PIC'] || '--'}</td>
+        `;
+        biBody.appendChild(tr);
+      });
+
+      // Function Repo table
+      const frBody = document.getElementById('frTableBody');
+      frBody.innerHTML = '';
+
+      frData.forEach(row => {
+        if (!row['Team'] || row['Team'] === 'Team' || !row['Team'].trim()) return;
+
+        const status = (row['Status'] || '').trim();
+        const targetDate = row['V1 Target Date'];
+        const isOverdue = targetDate && new Date(targetDate) < new Date() && status !== 'Live';
+
+        const latestMilestone = ['V1 Feedback Provided', 'V1 Repo Created', 'Base Logic / Learnings Uploaded', 'Biz Domain Defined', 'Base Query Uploaded', 'Kick Off Completed']
+          .find(m => (row[m] || '').trim() === 'Yes');
+
+        const tr = document.createElement('tr');
+        tr.className = isOverdue ? 'overdue' : '';
+        tr.innerHTML = `
+          <td>${row['Team']}</td>
+          <td>${row['Function']}</td>
+          <td><span class="status-badge ${status.toLowerCase().replace(' ', '-')}">${status}</span></td>
+          <td>${targetDate || '--'}</td>
+          <td><span class="milestone-indicator ${latestMilestone ? 'yes' : 'no'}">${latestMilestone || 'Not started'}</span></td>
+          <td>${row['BI PIC'] || '--'}</td>
+        `;
+        frBody.appendChild(tr);
+      });
+
+      // Populate filters after data is rendered
+      populateFilters();
     }
   </script>
 </body>
