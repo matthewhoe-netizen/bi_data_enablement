@@ -858,7 +858,7 @@
       <h2 class="section-title">Status by Team</h2>
 
       <div class="team-status-section">
-        <div class="team-status-header">Initiative Distribution Across Teams</div>
+        <div class="team-status-header">Initiatives per Team / Function</div>
 
         <div id="teamStatusContainer">
           <div class="team-row">
@@ -920,6 +920,10 @@
     <section id="tables" class="tables-section">
       <h2 class="section-title">Detailed Tracker</h2>
 
+      <div style="padding: 16px; background: #FAFAF8; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; color: #555;">
+        <p><strong>BI Data Enablement Initiatives:</strong> Tracks the development of data pipelines, analytics capabilities, and SMART Bot deployments. Each row represents a capability being built, with milestones from kickoff through to production deployment. A capability is considered "Live" when the first 5 milestones are completed (Kick Off, Business Logic, Pipeline, Data Testing, Integration to Repo).</p>
+      </div>
+
       <!-- BI Data Enablement Table -->
       <div class="table-wrapper">
         <div class="table-header">BI Data Enablement</div>
@@ -928,6 +932,12 @@
             <span class="filter-label">Filter:</span>
             <select class="filter-select" id="biTeamFilter" onchange="filterTable('bi')">
               <option value="">All Teams</option>
+            </select>
+            <select class="filter-select" id="biFunctionFilter" onchange="filterTable('bi')">
+              <option value="">All Functions</option>
+            </select>
+            <select class="filter-select" id="biCapabilityFilter" onchange="filterTable('bi')">
+              <option value="">All Capabilities</option>
             </select>
             <select class="filter-select" id="biStatusFilter" onchange="filterTable('bi')">
               <option value="">All Status</option>
@@ -942,12 +952,13 @@
           <thead>
             <tr>
               <th onclick="sortTable('bi', 0)">Team</th>
-              <th onclick="sortTable('bi', 1)">Capability</th>
-              <th onclick="sortTable('bi', 2)">Priority</th>
-              <th onclick="sortTable('bi', 3)">Status</th>
-              <th onclick="sortTable('bi', 4)">Target Date</th>
-              <th onclick="sortTable('bi', 5)">Latest Milestone</th>
-              <th onclick="sortTable('bi', 6)">PIC</th>
+              <th onclick="sortTable('bi', 1)">Function</th>
+              <th onclick="sortTable('bi', 2)">Capability</th>
+              <th onclick="sortTable('bi', 3)">Priority</th>
+              <th onclick="sortTable('bi', 4)">Status</th>
+              <th onclick="sortTable('bi', 5)">Target Date</th>
+              <th onclick="sortTable('bi', 6)">Latest Milestone</th>
+              <th onclick="sortTable('bi', 7)">PIC</th>
             </tr>
           </thead>
           <tbody id="biTableBody">
@@ -958,14 +969,21 @@
         </table>
       </div>
 
+      <div style="padding: 16px; background: #FAFAF8; border-radius: 8px; margin-bottom: 20px; margin-top: 30px; font-size: 13px; line-height: 1.6; color: #555;">
+        <p><strong>Functional Repo (Knowledge KB):</strong> A repository of reusable SQL functions and query templates. Each function can have multiple versions (V1, V2, etc.). Functions are marked "Live" once all base milestones are completed. This serves as a knowledge base of best practices and standardized queries across teams.</p>
+      </div>
+
       <!-- Function Repo Table -->
       <div class="table-wrapper">
-        <div class="table-header">Function Repo</div>
+        <div class="table-header">Functional Repo (Knowledge KB)</div>
         <div class="table-filters" id="frFilters">
           <div class="filter-group">
             <span class="filter-label">Filter:</span>
             <select class="filter-select" id="frTeamFilter" onchange="filterTable('fr')">
               <option value="">All Teams</option>
+            </select>
+            <select class="filter-select" id="frFunctionFilter" onchange="filterTable('fr')">
+              <option value="">All Functions</option>
             </select>
             <select class="filter-select" id="frStatusFilter" onchange="filterTable('fr')">
               <option value="">All Status</option>
@@ -1065,8 +1083,14 @@
 
           const team = (row['Team'] || '').trim();
           if (team) {
-            if (!teams[team]) teams[team] = { Live: 0, Ongoing: 0, 'Not started': 0 };
+            if (!teams[team]) teams[team] = { Live: 0, Ongoing: 0, 'Not started': 0, items: [] };
             teams[team][status] = (teams[team][status] || 0) + 1;
+            
+            // Track capability names
+            const capability = (row['Capability'] || '').trim();
+            if (capability && !teams[team].items.includes(capability)) {
+              teams[team].items.push(capability);
+            }
           }
         }
       });
@@ -1079,8 +1103,14 @@
 
           const team = (row['Team'] || '').trim();
           if (team) {
-            if (!teams[team]) teams[team] = { Live: 0, Ongoing: 0, 'Not started': 0 };
+            if (!teams[team]) teams[team] = { Live: 0, Ongoing: 0, 'Not started': 0, items: [] };
             teams[team][status] = (teams[team][status] || 0) + 1;
+            
+            // Track function names
+            const func = (row['Function'] || '').trim();
+            if (func && !teams[team].items.includes(func)) {
+              teams[team].items.push(func);
+            }
           }
         }
       });
@@ -1118,7 +1148,6 @@
       // Get all teams dynamically
       const teamNames = Object.keys(teams).filter(t => t && t !== 'undefined');
       
-      let firstTeam = true;
       for (const teamName of teamNames) {
         const counts = teams[teamName];
         const live = counts['Live'] || 0;
@@ -1130,7 +1159,7 @@
         const barElement = document.getElementById(barId + 'Bar');
         const labelElement = document.getElementById(barId + 'Label');
 
-        // Skip if elements don't exist (only show first 2 teams in UI)
+        // Skip if elements don't exist
         if (!barElement || !labelElement) {
           continue;
         }
@@ -1162,8 +1191,10 @@
           barElement.appendChild(seg);
         }
 
-        labelElement.textContent = `${live} Live · ${ongoing} Ongoing · ${notStarted} Not Started`;
-        firstTeam = false;
+        // Build label with status counts and function list
+        const functionList = counts.items ? counts.items.slice(0, 3).join(', ') : '';
+        const functionText = functionList ? ` (${functionList}${counts.items.length > 3 ? '...' : ''})` : '';
+        labelElement.innerHTML = `${live} Live · ${ongoing} Ongoing · ${notStarted} Not Started${functionText ? '<br><span style="font-size: 11px; color: #666; margin-top: 4px; display: block;">Functions: ' + functionText + '</span>' : ''}`;
       }
 
       // Unified bar - sum all teams
@@ -1272,6 +1303,7 @@
         tr.className = isOverdue ? 'overdue' : '';
         tr.innerHTML = `
           <td>${row['Team']}</td>
+          <td>${row['Functional'] || row['Function'] || '--'}</td>
           <td>${row['Capability']}</td>
           <td>${row['Priority']}</td>
           <td><span class="status-badge ${status.toLowerCase().replace(' ', '-')}">${status}</span></td>
@@ -1388,8 +1420,8 @@
     // ──── SORTING AND FILTERING ────
     let biSortState = { column: -1, direction: 'asc' };
     let frSortState = { column: -1, direction: 'asc' };
-    let biFilterState = { team: '', status: '', priority: '' };
-    let frFilterState = { team: '', status: '' };
+    let biFilterState = { team: '', function: '', capability: '', status: '', priority: '' };
+    let frFilterState = { team: '', function: '', status: '' };
 
     function sortTable(tableType, columnIndex) {
       const tbody = document.getElementById(tableType + 'TableBody');
@@ -1441,15 +1473,18 @@
       // Update filter state from dropdowns
       if (tableType === 'bi') {
         filterState.team = document.getElementById('biTeamFilter').value;
+        filterState.function = document.getElementById('biFunctionFilter').value;
+        filterState.capability = document.getElementById('biCapabilityFilter').value;
         filterState.status = document.getElementById('biStatusFilter').value;
         filterState.priority = document.getElementById('biPriorityFilter').value;
       } else {
         filterState.team = document.getElementById('frTeamFilter').value;
+        filterState.function = document.getElementById('frFunctionFilter').value;
         filterState.status = document.getElementById('frStatusFilter').value;
       }
 
       rows.forEach(row => {
-        if (row.style.display === 'none' && row.cells.length < 2) return; // Skip empty placeholder
+        if (row.style.display === 'none' && row.cells.length < 2) return;
 
         let show = true;
 
@@ -1458,16 +1493,30 @@
           show = false;
         }
 
-        // Status filter
-        const statusColIndex = tableType === 'bi' ? 3 : 2;
-        if (filterState.status && row.cells[statusColIndex].textContent.trim() !== filterState.status) {
-          show = false;
-        }
-
-        // Priority filter (BI only)
-        if (tableType === 'bi' && filterState.priority) {
-          const priorityText = row.cells[2].textContent.trim();
-          if (!priorityText.includes(filterState.priority)) {
+        // Function filter
+        if (tableType === 'bi') {
+          if (filterState.function && row.cells[1].textContent.trim() !== filterState.function) {
+            show = false;
+          }
+          // Capability filter (BI only)
+          if (filterState.capability && row.cells[2].textContent.trim() !== filterState.capability) {
+            show = false;
+          }
+          // Status filter (column 4 for BI with 2 columns)
+          if (filterState.status && row.cells[4].textContent.trim() !== filterState.status) {
+            show = false;
+          }
+          // Priority filter (column 3 for BI with 2 columns)
+          if (filterState.priority && !row.cells[3].textContent.trim().includes(filterState.priority)) {
+            show = false;
+          }
+        } else {
+          // FR: Function is column 1
+          if (filterState.function && row.cells[1].textContent.trim() !== filterState.function) {
+            show = false;
+          }
+          // Status filter (column 2 for FR)
+          if (filterState.status && row.cells[2].textContent.trim() !== filterState.status) {
             show = false;
           }
         }
@@ -1479,27 +1528,46 @@
     function clearFilters(tableType) {
       if (tableType === 'bi') {
         document.getElementById('biTeamFilter').value = '';
+        document.getElementById('biFunctionFilter').value = '';
+        document.getElementById('biCapabilityFilter').value = '';
         document.getElementById('biStatusFilter').value = '';
         document.getElementById('biPriorityFilter').value = '';
-        biFilterState = { team: '', status: '', priority: '' };
+        biFilterState = { team: '', function: '', capability: '', status: '', priority: '' };
       } else {
         document.getElementById('frTeamFilter').value = '';
+        document.getElementById('frFunctionFilter').value = '';
         document.getElementById('frStatusFilter').value = '';
-        frFilterState = { team: '', status: '' };
+        frFilterState = { team: '', function: '', status: '' };
       }
 
       filterTable(tableType);
     }
 
     // Populate filter dropdowns after data loads
-    function populateFilters() {
-      const biData = window.trackerData.bi;
-      const frData = window.trackerData.fr;
+    function populateFilters(biData, frData) {
+      if (!biData || !frData) {
+        console.error('No data provided to populateFilters');
+        return;
+      }
+
+      // Clear existing options first (except "All")
+      const clearSelects = ['biTeamFilter', 'biFunctionFilter', 'biCapabilityFilter', 'biStatusFilter', 'biPriorityFilter', 'frTeamFilter', 'frFunctionFilter', 'frStatusFilter'];
+      clearSelects.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+          // Keep only the first option (All)
+          while (select.options.length > 1) {
+            select.remove(1);
+          }
+        }
+      });
 
       // BI filters
-      const biTeams = [...new Set(biData.map(r => r['Team']).filter(t => t))].sort();
-      const biStatuses = [...new Set(biData.map(r => r['Status']).filter(s => s))].sort();
-      const biPriorities = [...new Set(biData.map(r => r['Priority']).filter(p => p))].sort();
+      const biTeams = [...new Set(biData.map(r => r['Team']).filter(t => t && t.trim()))].sort();
+      const biFunctions = [...new Set(biData.map(r => r['Functional'] || r['Function'] || '').filter(f => f && f.trim()))].sort();
+      const biCapabilities = [...new Set(biData.map(r => r['Capability']).filter(c => c && c.trim()))].sort();
+      const biStatuses = [...new Set(biData.map(r => r['Status']).filter(s => s && s.trim()))].sort();
+      const biPriorities = [...new Set(biData.map(r => r['Priority']).filter(p => p && p.trim()))].sort();
 
       const biTeamSelect = document.getElementById('biTeamFilter');
       biTeams.forEach(team => {
@@ -1507,6 +1575,22 @@
         opt.value = team;
         opt.textContent = team;
         biTeamSelect.appendChild(opt);
+      });
+
+      const biFunctionSelect = document.getElementById('biFunctionFilter');
+      biFunctions.forEach(func => {
+        const opt = document.createElement('option');
+        opt.value = func;
+        opt.textContent = func;
+        biFunctionSelect.appendChild(opt);
+      });
+
+      const biCapabilitySelect = document.getElementById('biCapabilityFilter');
+      biCapabilities.forEach(cap => {
+        const opt = document.createElement('option');
+        opt.value = cap;
+        opt.textContent = cap;
+        biCapabilitySelect.appendChild(opt);
       });
 
       const biStatusSelect = document.getElementById('biStatusFilter');
@@ -1526,8 +1610,9 @@
       });
 
       // FR filters
-      const frTeams = [...new Set(frData.map(r => r['Team']).filter(t => t))].sort();
-      const frStatuses = [...new Set(frData.map(r => r['Status']).filter(s => s))].sort();
+      const frTeams = [...new Set(frData.map(r => r['Team']).filter(t => t && t.trim()))].sort();
+      const frFunctions = [...new Set(frData.map(r => r['Function']).filter(f => f && f.trim()))].sort();
+      const frStatuses = [...new Set(frData.map(r => r['Status']).filter(s => s && s.trim()))].sort();
 
       const frTeamSelect = document.getElementById('frTeamFilter');
       frTeams.forEach(team => {
@@ -1537,6 +1622,14 @@
         frTeamSelect.appendChild(opt);
       });
 
+      const frFunctionSelect = document.getElementById('frFunctionFilter');
+      frFunctions.forEach(func => {
+        const opt = document.createElement('option');
+        opt.value = func;
+        opt.textContent = func;
+        frFunctionSelect.appendChild(opt);
+      });
+
       const frStatusSelect = document.getElementById('frStatusFilter');
       frStatuses.forEach(status => {
         const opt = document.createElement('option');
@@ -1544,67 +1637,8 @@
         opt.textContent = status;
         frStatusSelect.appendChild(opt);
       });
-    }
 
-    // Call after data is rendered
-    function renderTables(biData, frData) {
-      // BI Data table
-      const biBody = document.getElementById('biTableBody');
-      biBody.innerHTML = '';
-
-      biData.forEach(row => {
-        if (!row['Team'] || row['Team'] === 'Team' || !row['Team'].trim()) return;
-
-        const status = (row['Status'] || '').trim();
-        const targetDate = row['Target Live Date'];
-        const isOverdue = targetDate && new Date(targetDate) < new Date() && status !== 'Live';
-
-        const latestMilestone = ['SMART BOT Built', 'Integrated to Repo', 'Data Tested', 'Pipeline Developed', 'Business Logic Defined', 'Kick Off Completed']
-          .find(m => (row[m] || '').trim() === 'Yes');
-
-        const tr = document.createElement('tr');
-        tr.className = isOverdue ? 'overdue' : '';
-        tr.innerHTML = `
-          <td>${row['Team']}</td>
-          <td>${row['Capability']}</td>
-          <td>${row['Priority']}</td>
-          <td><span class="status-badge ${status.toLowerCase().replace(' ', '-')}">${status}</span></td>
-          <td>${targetDate || '--'}</td>
-          <td><span class="milestone-indicator ${latestMilestone ? 'yes' : 'no'}">${latestMilestone || 'Not started'}</span></td>
-          <td>${row['BI PIC'] || '--'}</td>
-        `;
-        biBody.appendChild(tr);
-      });
-
-      // Function Repo table
-      const frBody = document.getElementById('frTableBody');
-      frBody.innerHTML = '';
-
-      frData.forEach(row => {
-        if (!row['Team'] || row['Team'] === 'Team' || !row['Team'].trim()) return;
-
-        const status = (row['Status'] || '').trim();
-        const targetDate = row['V1 Target Date'];
-        const isOverdue = targetDate && new Date(targetDate) < new Date() && status !== 'Live';
-
-        const latestMilestone = ['V1 Feedback Provided', 'V1 Repo Created', 'Base Logic / Learnings Uploaded', 'Biz Domain Defined', 'Base Query Uploaded', 'Kick Off Completed']
-          .find(m => (row[m] || '').trim() === 'Yes');
-
-        const tr = document.createElement('tr');
-        tr.className = isOverdue ? 'overdue' : '';
-        tr.innerHTML = `
-          <td>${row['Team']}</td>
-          <td>${row['Function']}</td>
-          <td><span class="status-badge ${status.toLowerCase().replace(' ', '-')}">${status}</span></td>
-          <td>${targetDate || '--'}</td>
-          <td><span class="milestone-indicator ${latestMilestone ? 'yes' : 'no'}">${latestMilestone || 'Not started'}</span></td>
-          <td>${row['BI PIC'] || '--'}</td>
-        `;
-        frBody.appendChild(tr);
-      });
-
-      // Populate filters after data is rendered
-      populateFilters();
+      console.log('Filters populated - BI Teams:', biTeams, 'BI Functions:', biFunctions, 'BI Capabilities:', biCapabilities);
     }
 
     // Initialize on page load
