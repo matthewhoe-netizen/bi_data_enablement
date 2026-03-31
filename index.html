@@ -1039,12 +1039,16 @@
 
     // JSONP callback
     window.handleDataResponse = function(result) {
+      console.log('JSONP callback received:', result); // DEBUG
       if (!result.success) {
         console.error('Error:', result.error);
         document.getElementById('lastUpdated').textContent = 'Error';
         return;
       }
 
+      console.log('BI Data rows:', result.data.bi.length); // DEBUG
+      console.log('FR Data rows:', result.data.fr.length); // DEBUG
+      
       processData(result.data.bi, result.data.fr);
       document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
     };
@@ -1069,7 +1073,7 @@
     function calculateMetrics(data) {
       // Count statuses across both tabs
       const statuses = { Live: 0, Ongoing: 0, 'Not started': 0, TBD: 0 };
-      const teams = { Logistics: {}, SPX: {} };
+      const teams = {}; // Initialize as empty - will be populated dynamically
 
       // Process BI Data
       data.bi.forEach(row => {
@@ -1098,6 +1102,9 @@
           }
         }
       });
+
+      console.log('Teams found:', Object.keys(teams)); // DEBUG
+      console.log('Statuses:', statuses); // DEBUG
 
       // Update metric cards
       const live = statuses['Live'] || 0;
