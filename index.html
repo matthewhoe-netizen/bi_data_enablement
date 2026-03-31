@@ -1128,16 +1128,15 @@
       container.innerHTML = '';
       
       console.log('updateTeamBars called with teams:', Object.keys(teams));
-      console.log('biData rows:', biData ? biData.length : 'null');
-      console.log('frData rows:', frData ? frData.length : 'null');
 
       // Combine BI and FR data for function tracking
       const allData = (biData || []).concat(frData || []);
       
-      // Build team -> function -> statuses map
+      // Build team -> function -> statuses map (AGGREGATED)
       const teamFunctionMap = {};
       allData.forEach(row => {
         const team = (row['Team'] || '').trim();
+        // Use 'Capability' from BI or 'Function' from FR (same column logic)
         const func = (row['Capability'] || row['Function'] || '').trim();
         const status = (row['Status'] || '').trim();
         
@@ -1148,7 +1147,7 @@
         }
       });
 
-      console.log('teamFunctionMap:', teamFunctionMap);
+      console.log('Aggregated teamFunctionMap:', teamFunctionMap);
 
       // Create collapsible sections for each team
       const teamNames = Object.keys(teams).filter(t => t && t !== 'undefined').sort();
@@ -1190,7 +1189,7 @@
         const functionsDiv = document.createElement('div');
         functionsDiv.className = 'team-functions';
 
-        // Add function rows
+        // Add function rows - AGGREGATED from both BI and FR
         const teamFunctions = teamFunctionMap[teamName] || {};
         const funcNames = Object.keys(teamFunctions).sort();
         
