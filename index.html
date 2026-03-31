@@ -914,30 +914,7 @@
       </div>
     </section>
 
-    <!-- CLAUDE SUMMARY -->
-    <section id="claude">
-      <div class="claude-section">
-        <div class="claude-header">
-          <div class="claude-icon">🤖</div>
-          <div>
-            <div class="claude-title">AI-Powered Analysis</div>
-            <div class="claude-subtitle">Claude Sonnet 4.6 summarizes your initiatives</div>
-          </div>
-        </div>
-
-        <div class="claude-content">
-          <button class="claude-button" id="generateSummaryBtn" onclick="generateSummary()">
-            <span>Generate Summary</span>
-          </button>
-
-          <div class="claude-loading" id="claudeLoading">
-            <span class="spinner"></span>Analyzing initiatives...
-          </div>
-
-          <div class="claude-summary" id="claudeSummary"></div>
-        </div>
-      </div>
-    </section>
+    <!-- CLAUDE SUMMARY DISABLED -->
 
     <!-- TABLES -->
     <section id="tables" class="tables-section">
@@ -1042,7 +1019,7 @@
       console.log('JSONP callback received:', result); // DEBUG
       if (!result.success) {
         console.error('Error:', result.error);
-        document.getElementById('lastUpdated').textContent = 'Error';
+        document.getElementById('lastUpdated').textContent = 'Error: ' + result.error;
         return;
       }
 
@@ -1050,7 +1027,12 @@
       console.log('FR Data rows:', result.data.fr.length); // DEBUG
       
       processData(result.data.bi, result.data.fr);
-      document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+      
+      // Update timestamp
+      const now = new Date();
+      const timeStr = now.toLocaleString();
+      document.getElementById('lastUpdated').textContent = timeStr;
+      console.log('Timestamp set to:', timeStr); // DEBUG
     };
 
     function processData(biData, frData) {
