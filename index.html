@@ -1226,8 +1226,8 @@
     }
 
     function calculateCompletion(data) {
-      // BI Data Enablement: count rows where all milestone columns are "Yes"
-      const biMilestones = ['Kick Off Completed', 'Business Logic Defined', 'Pipeline Developed', 'Data Tested', 'Integrated to Repo', 'SMART BOT Built'];
+      // BI Data Enablement: count rows where first 5 milestone columns are "Yes" (step 6 optional)
+      const biMilestones = ['Kick Off Completed', 'Business Logic Defined', 'Pipeline Developed', 'Data Tested', 'Integrated to Repo'];
       let biComplete = 0;
       let biTotal = 0;
 
@@ -1340,30 +1340,44 @@
       summary.classList.remove('active');
 
       try {
-        // Call Apps Script endpoint to get summary
-        const response = await fetch(APPS_SCRIPT_URL + '?action=summary');
-        const result = await response.json();
-
-        if (!result.success) {
-          throw new Error(result.error || 'Unknown error');
-        }
-
-        const summaryText = result.summary;
-        const wasCached = result.cached;
-
-        // Format and display summary
-        displaySummary(summaryText, wasCached);
+        // Use JSONP to bypass CORS (like loadData does)
+        const script = document.createElement('script');
+        script.src = APPS_SCRIPT_URL + '?action=summary&callback=handleSummaryResponse';
+        script.onerror = function() {
+          throw new Error('Failed to fetch summary');
+        };
+        document.head.appendChild(script);
 
       } catch (error) {
         console.error('Error:', error);
         summary.innerHTML = '<div style="color: #c03010;">Error generating summary. Please try again.</div>';
         summary.classList.add('active');
-      } finally {
         btn.classList.remove('loading');
         btn.disabled = false;
         loading.classList.remove('active');
       }
     }
+
+    // JSONP callback for summary
+    window.handleSummaryResponse = function(result) {
+      const btn = document.getElementById('generateSummaryBtn');
+      const loading = document.getElementById('claudeLoading');
+      const summary = document.getElementById('claudeSummary');
+
+      if (!result.success) {
+        console.error('Error:', result.error);
+        summary.innerHTML = '<div style="color: #c03010;">Error: ' + result.error + '</div>';
+        summary.classList.add('active');
+      } else {
+        const summaryText = result.summary;
+        const wasCached = result.cached;
+        displaySummary(summaryText, wasCached);
+      }
+
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      loading.classList.remove('active');
+    };
 
     function displaySummary(summaryText, wasCached) {
       const summary = document.getElementById('claudeSummary');
